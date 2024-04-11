@@ -1,51 +1,57 @@
-import numpy as np
+from sympy import Symbol, solve
 
-# Generate synthetic data
-np.random.seed(0)
-X = np.random.rand(100, 1)  # Random input values
-y = 2 * X**3 + 3 * X**2 + 4 * X + 5 + np.random.randn(100, 1)  # Cubic equation with noise
+def loss_function(a, b, c, d, x):
+    """Calculates the mean squared error loss for a cubic equation."""
+    return (a*x**3 + b*x**2 + c*x + d) ** 2
 
-# Initialize parameters (integers)
-a = np.random.randint(-10, 10)
-b = np.random.randint(-10, 10)
-c = np.random.randint(-10, 10)
-d = np.random.randint(-10, 10)
+def solve_cubic_sgd(a, b, c, d, learning_rate=0.01, num_iterations=1000):
+    """
+    Attempts to solve a cubic equation using SGD.
 
-# Define model
-def cubic_model(X, a, b, c, d):
-    return a * X**3 + b * X**2 + c * X + d
+    Args:
+        a: The coefficient of the x^3 term (int or float).
+        b: The coefficient of the x^2 term (int or float).
+        c: The coefficient of the x term (int or float).
+        d: The constant term (int or float).
+        learning_rate: The learning rate for SGD (default: 0.01).
+        num_iterations: The number of iterations for SGD (default: 1000).
 
-# Define loss function (Mean Squared Error)
-def mse_loss(y_true, y_pred):
-    return np.mean((y_true - y_pred)**2)
+    Returns:
+        The final guess for x (may not be the exact solution).
+    """
+    x = 0.0  # Initial guess
+    for i in range(num_iterations):
+        gradient = 3 * a * x**2 + 2 * b * x + c
+        x -= learning_rate * gradient
+    return x
 
-# Training loop with SGD
-learning_rate = 0.01
-epochs = 1000
-for epoch in range(epochs):
-    # Forward pass
-    y_pred = cubic_model(X, a, b, c, d)
-    
-    # Compute loss
-    loss = mse_loss(y, y_pred)
-    
-    # Backward pass (compute gradients)
-    grad_a = np.mean(3 * X**2 * (y_pred - y))
-    grad_b = np.mean(2 * X * (y_pred - y))
-    grad_c = np.mean(X * (y_pred - y))
-    grad_d = np.mean(y_pred - y)
-    
-    # Update parameters using SGD and ReLU
-    a -= learning_rate * grad_a * (grad_a > 0)
-    b -= learning_rate * grad_b * (grad_b > 0)
-    c -= learning_rate * grad_c * (grad_c > 0)
-    d -= learning_rate * grad_d * (grad_d > 0)
-    
-    if epoch % 100 == 0:
-        print(f"Epoch {epoch+1}, Loss: {loss}")
+def solve_cubic_sympy(a, b, c, d):
+    """
+    Solves a cubic equation using SymPy library.
 
-# Evaluate the model
-y_pred_final = cubic_model(X, a, b, c, d)
-final_loss = mse_loss(y, y_pred_final)
-print("Final Loss:", final_loss)
-print("Final Parameters (a, b, c, d):", a, b, c, d)
+    Args:
+        a: The coefficient of the x^3 term (int or float).
+        b: The coefficient of the x^2 term (int or float).
+        c: The coefficient of the x term (int or float).
+        d: The constant term (int or float).
+
+    Returns:
+        A list of symbolic solutions for x.
+    """
+    x = Symbol('x')
+    equation = a*x**3 + b*x**2 + c*x + d
+    solutions = solve(equation, x)
+    return solutions
+
+# Example usage (SGD approach might not find all solutions)
+a = 1
+b = -1
+c = 2
+d = -1
+
+solution_sgd = solve_cubic_sgd(a, b, c, d)
+print("SGD Solution (might not be exact):", solution_sgd)
+
+# Example usage (SymPy approach)
+solutions_sympy = solve_cubic_sympy(a, b, c, d)
+print("SymPy Solutions:", solutions_sympy)
